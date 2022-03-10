@@ -352,8 +352,8 @@ function baseCreateRenderer(
   // Note: functions inside this closure should use `const xxx = () => {}`
   // style in order to prevent being inlined by minifiers.
   const patch: PatchFn = (
-    n1,
-    n2,
+    n1, // 老节点
+    n2, // 新节点
     container,
     anchor = null,
     parentComponent = null,
@@ -380,20 +380,20 @@ function baseCreateRenderer(
 
     const { type, ref, shapeFlag } = n2
     switch (type) {
-      case Text:
+      case Text:  // 文本
         processText(n1, n2, container, anchor)
         break
-      case Comment:
+      case Comment:  // 注释
         processCommentNode(n1, n2, container, anchor)
         break
-      case Static:
+      case Static:  // 静态节点
         if (n1 == null) {
           mountStaticNode(n2, container, anchor, isSVG)
         } else if (__DEV__) {
           patchStaticNode(n1, n2, container, isSVG)
         }
         break
-      case Fragment:
+      case Fragment:  // 分片
         processFragment(
           n1,
           n2,
@@ -419,7 +419,7 @@ function baseCreateRenderer(
             slotScopeIds,
             optimized
           )
-        } else if (shapeFlag & ShapeFlags.COMPONENT) {
+        } else if (shapeFlag & ShapeFlags.COMPONENT) {  // 首次执行
           processComponent(
             n1,
             n2,
@@ -1158,6 +1158,7 @@ function baseCreateRenderer(
     optimized: boolean
   ) => {
     n2.slotScopeIds = slotScopeIds
+    // 首次渲染，传入的 n1 是 null
     if (n1 == null) {
       if (n2.shapeFlag & ShapeFlags.COMPONENT_KEPT_ALIVE) {
         ;(parentComponent!.ctx as KeepAliveContext).activate(
@@ -1168,6 +1169,7 @@ function baseCreateRenderer(
           optimized
         )
       } else {
+        // 挂载根组件
         mountComponent(
           n2,
           container,
@@ -1196,6 +1198,8 @@ function baseCreateRenderer(
     // mounting
     const compatMountInstance =
       __COMPAT__ && initialVNode.isCompatRoot && initialVNode.component
+    // 组件的挂载过程：
+    // 1.组件实例创建
     const instance: ComponentInternalInstance =
       compatMountInstance ||
       (initialVNode.component = createComponentInstance(
@@ -1223,6 +1227,7 @@ function baseCreateRenderer(
       if (__DEV__) {
         startMeasure(instance, `init`)
       }
+      // 2.初始化组件的实例
       setupComponent(instance)
       if (__DEV__) {
         endMeasure(instance, `init`)
@@ -1243,6 +1248,12 @@ function baseCreateRenderer(
       return
     }
 
+    // 3.获取 vnode
+    // 具体为：
+    // 1 创建组件的更新函数
+    //   1.1 执行 render 获得 vnode
+    //   1.2 patch(oldnode, vnode)
+    // 2 创建更新机制 new ReactiveEffect(更新函数)
     setupRenderEffect(
       instance,
       initialVNode,
@@ -1303,6 +1314,7 @@ function baseCreateRenderer(
     isSVG,
     optimized
   ) => {
+    // 1.创建更新函数
     const componentUpdateFn = () => {
       if (!instance.isMounted) {
         let vnodeHook: VNodeHook | null | undefined
@@ -1541,6 +1553,7 @@ function baseCreateRenderer(
       }
     }
 
+    // 2.创建更新机制，安装副作用
     // create reactive effect for rendering
     const effect = (instance.effect = new ReactiveEffect(
       componentUpdateFn,
@@ -1548,6 +1561,7 @@ function baseCreateRenderer(
       instance.scope // track it in component's effect scope
     ))
 
+    // 获取更新函数
     const update = (instance.update = effect.run.bind(effect) as SchedulerJob)
     update.id = instance.uid
     // allowRecurse
@@ -1565,6 +1579,7 @@ function baseCreateRenderer(
       update.ownerInstance = instance
     }
 
+    // 首次执行组件更新
     update()
   }
 
@@ -2300,12 +2315,15 @@ function baseCreateRenderer(
     return hostNextSibling((vnode.anchor || vnode.el)!)
   }
 
+  // 首次渲染
   const render: RootRenderFunction = (vnode, container, isSVG) => {
     if (vnode == null) {
       if (container._vnode) {
         unmount(container._vnode, null, null, true)
       }
     } else {
+      // 首次执行，传入根组件的 vnode，参数1 n1 是空的
+      // 所以首次执行的是挂载过程，如果 n1 不为空会进行 diff
       patch(container._vnode || null, vnode, container, null, null, null, isSVG)
     }
     flushPostFlushCbs()
@@ -2333,9 +2351,13 @@ function baseCreateRenderer(
     )
   }
 
+  // 返回渲染器对象，提供了下面三个方法
   return {
+    // 把接收到的 vnode 转换成 dom，追加到宿主元素上去
     render,
+    // 服务端渲染的方法，用于 ssr，服务端讲一个 vnode 生成为 html
     hydrate,
+    // 创建 app 实例
     createApp: createAppAPI(render, hydrate)
   }
 }
