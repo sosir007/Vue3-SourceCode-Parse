@@ -6,9 +6,12 @@
 const { build } = require('esbuild')
 const nodePolyfills = require('@esbuild-plugins/node-modules-polyfill')
 const { resolve, relative } = require('path')
+// 获取命令行参数
 const args = require('minimist')(process.argv.slice(2))
 
+// 设置打包目标，默认什么也不传会打包 vue
 const target = args._[0] || 'vue'
+// 设置打包格式 --formats xxx 或者 -f xxx
 const format = args.f || 'global'
 const inlineDeps = args.i || args.inline
 const pkg = require(resolve(__dirname, `../packages/${target}/package.json`))
@@ -71,7 +74,7 @@ build({
   outfile,
   bundle: true,
   external,
-  sourcemap: true,
+  sourcemap: true,  // 设置映射文件
   format: outputFormat,
   globalName: pkg.buildOptions?.name,
   platform: format === 'cjs' ? 'node' : 'browser',

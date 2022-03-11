@@ -9,7 +9,9 @@ if (!process.env.TARGET) {
 }
 
 const masterVersion = require('./package.json').version
+// 获取包的目录结构  ./packages
 const packagesDir = path.resolve(__dirname, 'packages')
+// 包名称 vue 最后得到 ./packages/vue
 const packageDir = path.resolve(packagesDir, process.env.TARGET)
 const resolve = p => path.resolve(packageDir, p)
 const pkg = require(resolve(`package.json`))
@@ -47,6 +49,7 @@ const outputConfigs = {
   },
   'global-runtime': {
     file: resolve(`dist/${name}.runtime.global.js`),
+    // 立即执行的自调函数
     format: 'iife'
   }
 }
@@ -118,6 +121,7 @@ function createConfig(format, output, plugins = []) {
   // during a single build.
   hasTSChecked = true
 
+  // 入口文件
   let entryFile = /runtime$/.test(format) ? `src/runtime.ts` : `src/index.ts`
 
   // the compat build needs both default AND named exports. This will cause
