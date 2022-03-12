@@ -63,6 +63,7 @@ export const hydrate = ((...args) => {
   ensureHydrationRenderer().hydrate(...args)
 }) as RootHydrateFunction
 
+// 用户调用的 createApp
 export const createApp = ((...args) => {
   // 获取一个渲染器，执行 createApp 方法，得到 app 实例
   const app = ensureRenderer().createApp(...args)

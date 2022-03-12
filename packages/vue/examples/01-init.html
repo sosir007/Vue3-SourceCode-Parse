@@ -7,8 +7,14 @@
   Vue.createApp({
     data() {
       return {
-        title: 'vue3初始化流程'
+        title: 'vue3 使用 data 初始化流程'
       }
     },
+    // 优先从 setup 中先取值，如果找到了就不再找了，找不到就去 options 选项中找
+    setup() {
+      return {
+        title: 'vue3 使用 setup 初始化流程'
+      }
+    }
   }).mount('#app')
 </script>

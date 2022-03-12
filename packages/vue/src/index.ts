@@ -31,6 +31,7 @@ function compileToFunction(
   }
 
   const key = template
+  // 为了提高编译的效率，编译的结果会被缓存
   const cached = compileCache[key]
   if (cached) {
     return cached
@@ -81,7 +82,17 @@ function compileToFunction(
   // In the global build we know `Vue` is available globally so we can avoid
   // the wildcard object.
 
-  // code：`function() { return function(){} }` 字符串格式的 js 代码
+  // code 是以字符串格式的 js 代码
+  // 下面代码是使用 ./examples/01-init.html 文件编译出来的结果
+  // "const _Vue = Vue
+
+  // return function render(_ctx, _cache) {
+  //   with (_ctx) {
+  //     const { toDisplayString: _toDisplayString, openBlock: _openBlock, createElementBlock: _createElementBlock } = _Vue
+
+  //     return (_openBlock(), _createElementBlock("h1", null, _toDisplayString(title), 1 /* TEXT */))
+  //   }
+  // }"
   const render = (
     __GLOBAL__ ? new Function(code)() : new Function('Vue', code)(runtimeDom)
   ) as RenderFunction

@@ -1161,6 +1161,7 @@ function baseCreateRenderer(
     // 首次渲染，传入的 n1 是 null
     if (n1 == null) {
       if (n2.shapeFlag & ShapeFlags.COMPONENT_KEPT_ALIVE) {
+        // KeepAlive 原理可以看这里
         ;(parentComponent!.ctx as KeepAliveContext).activate(
           n2,
           container,
@@ -1185,6 +1186,7 @@ function baseCreateRenderer(
     }
   }
 
+  // 挂载组件
   const mountComponent: MountComponentFn = (
     initialVNode,
     container,
@@ -1228,6 +1230,9 @@ function baseCreateRenderer(
         startMeasure(instance, `init`)
       }
       // 2.初始化组件的实例
+      //   2.1 setup
+      //   2.1.1 编译 render 选项
+      //   2.2 applyOptions
       setupComponent(instance)
       if (__DEV__) {
         endMeasure(instance, `init`)
@@ -1251,7 +1256,7 @@ function baseCreateRenderer(
     // 3.获取 vnode
     // 具体为：
     // 1 创建组件的更新函数
-    //   1.1 执行 render 获得 vnode
+    //   1.1 instance 的渲染函数执行一下，也就是执行 render 获得 vnode
     //   1.2 patch(oldnode, vnode)
     // 2 创建更新机制 new ReactiveEffect(更新函数)
     setupRenderEffect(
@@ -1553,7 +1558,7 @@ function baseCreateRenderer(
       }
     }
 
-    // 2.创建更新机制，安装副作用
+    // 2.创建更新机制，安装副作用，按照 参数2 的方式去执行 参数1
     // create reactive effect for rendering
     const effect = (instance.effect = new ReactiveEffect(
       componentUpdateFn,
@@ -1579,7 +1584,7 @@ function baseCreateRenderer(
       update.ownerInstance = instance
     }
 
-    // 首次执行组件更新
+    // 首次执行组件更新，这个时候用户才看到了首屏界面
     update()
   }
 

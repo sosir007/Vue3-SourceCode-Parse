@@ -585,11 +585,14 @@ export function setupComponent(
 ) {
   isInSSRComponentSetup = isSSR
 
+  // 从虚拟dom中拿出了 props 和 children
   const { props, children } = instance.vnode
   const isStateful = isStatefulComponent(instance)
+  // 属性和插槽的初始化
   initProps(instance, props, isStateful, isSSR)
   initSlots(instance, children)
 
+  // 判断当前组件是否有状态
   const setupResult = isStateful
     ? setupStatefulComponent(instance, isSSR)
     : undefined
@@ -631,11 +634,13 @@ function setupStatefulComponent(
   instance.accessCache = Object.create(null)
   // 1. create public instance / render proxy
   // also mark it raw so it's never observed
+  // 给当前组件做了一个代理
   instance.proxy = markRaw(new Proxy(instance.ctx, PublicInstanceProxyHandlers))
   if (__DEV__) {
     exposePropsOnRenderContext(instance)
   }
   // 2. call setup()
+  // 调用 setup 选项
   const { setup } = Component
   if (setup) {
     const setupContext = (instance.setupContext =
@@ -687,6 +692,7 @@ export function handleSetupResult(
   setupResult: unknown,
   isSSR: boolean
 ) {
+  // render 函数
   if (isFunction(setupResult)) {
     // setup returned an inline render function
     if (__SSR__ && (instance.type as ComponentOptions).__ssrInlineRender) {
@@ -708,6 +714,7 @@ export function handleSetupResult(
     if (__DEV__ || __FEATURE_PROD_DEVTOOLS__) {
       instance.devtoolsRawSetupState = setupResult
     }
+    // 把数据变成响应式
     instance.setupState = proxyRefs(setupResult)
     if (__DEV__) {
       exposeSetupStateOnRenderContext(instance)
@@ -763,6 +770,7 @@ export function finishComponentSetup(
 
   // template / render function normalization
   // could be already set when returned from setup()
+  // 如果当前组件没有渲染函数，生成一个渲染函数
   if (!instance.render) {
     // only do on-the-fly compile if not in SSR - SSR on-the-fly compilation
     // is done by server-renderer
@@ -796,6 +804,7 @@ export function finishComponentSetup(
             extend(finalCompilerOptions.compatConfig, Component.compatConfig)
           }
         }
+        // 重新设置给当前组件的渲染函数
         Component.render = compile(template, finalCompilerOptions)
         if (__DEV__) {
           endMeasure(instance, `compile`)
@@ -814,6 +823,7 @@ export function finishComponentSetup(
   }
 
   // support for 2.x options
+  // 兼容 vue2
   if (__FEATURE_OPTIONS_API__ && !(__COMPAT__ && skipOptions)) {
     setCurrentInstance(instance)
     pauseTracking()
