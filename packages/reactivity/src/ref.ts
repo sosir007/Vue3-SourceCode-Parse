@@ -13,6 +13,8 @@ import { createDep, Dep } from './dep'
 
 declare const RefSymbol: unique symbol
 
+// ref 也是一个响应式对象，但是是包装对象，内部有个属性叫 value
+// ref(123) => Ref<number> 内部的 value 就是 number
 export interface Ref<T = any> {
   value: T
   /**
@@ -64,11 +66,13 @@ export function isRef(r: any): r is Ref {
   return !!(r && r.__v_isRef === true)
 }
 
+// ref 的重载
 export function ref<T extends object>(
   value: T
 ): [T] extends [Ref] ? T : Ref<UnwrapRef<T>>
 export function ref<T>(value: T): Ref<UnwrapRef<T>>
 export function ref<T = any>(): Ref<T | undefined>
+// 具体的实现
 export function ref(value?: unknown) {
   return createRef(value, false)
 }
@@ -86,6 +90,7 @@ export function shallowRef(value?: unknown) {
   return createRef(value, true)
 }
 
+// 如何创建一个 Ref 对象
 function createRef(rawValue: unknown, shallow: boolean) {
   if (isRef(rawValue)) {
     return rawValue
@@ -93,6 +98,7 @@ function createRef(rawValue: unknown, shallow: boolean) {
   return new RefImpl(rawValue, shallow)
 }
 
+// 单值响应式是不会有数据的新增和删除的
 class RefImpl<T> {
   private _value: T
   private _rawValue: T
@@ -106,6 +112,7 @@ class RefImpl<T> {
   }
 
   get value() {
+    // 依赖收集
     trackRefValue(this)
     return this._value
   }

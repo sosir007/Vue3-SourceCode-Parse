@@ -1,0 +1,30 @@
+<div id="app">
+  <h1 :title="title">{{counter}}</h1>
+  <!-- <p>hello vue3!</p> -->
+  <comp foo="foo" bar="bar">
+</div>
+
+<script src="../dist/vue.global.js"></script>
+<script>
+  Vue.createApp({
+    data() {
+      return {
+        counter: 1
+      }
+    },
+    mounted() {
+      setInterval(() => {
+        this.counter++
+      }, 1000)
+    },
+  })
+  .component('comp', {
+    props: ['foo'],
+    template: `
+      <div>comp</div>
+      <p>{{foo}}</p>
+      <p>{{$attrs.bar}}</p>
+    `
+  })
+  .mount('#app')
+</script>

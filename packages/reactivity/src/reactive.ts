@@ -86,12 +86,14 @@ export type UnwrapNestedRefs<T> = T extends Ref ? T : UnwrapRefSimple<T>
  * count.value // -> 1
  * ```
  */
+// 转换传入的对象为响应式对象
 export function reactive<T extends object>(target: T): UnwrapNestedRefs<T>
 export function reactive(target: object) {
   // if trying to observe a readonly proxy, return the readonly version.
   if (isReadonly(target)) {
     return target
   }
+  // 创建响应式对象，参数 3、4 都是代理器
   return createReactiveObject(
     target,
     false,
@@ -185,6 +187,7 @@ function createReactiveObject(
   collectionHandlers: ProxyHandler<any>,
   proxyMap: WeakMap<Target, any>
 ) {
+  // 不是对象报错
   if (!isObject(target)) {
     if (__DEV__) {
       console.warn(`value cannot be made reactive: ${String(target)}`)
@@ -193,6 +196,7 @@ function createReactiveObject(
   }
   // target is already a Proxy, return it.
   // exception: calling readonly() on a reactive object
+  // 如果已经是响应式对象，则直接返回，避免重复执行响应式
   if (
     target[ReactiveFlags.RAW] &&
     !(isReadonly && target[ReactiveFlags.IS_REACTIVE])
@@ -209,6 +213,9 @@ function createReactiveObject(
   if (targetType === TargetType.INVALID) {
     return target
   }
+  // 从这里开始响应式处理：利用 Proxy 做代理
+  // 如果是 COLLECTION 类型执行 collectionHandlers，如果是普通对象就用 baseHandlers
+  // COLLECTION：包含了 Map、Set 这种结构
   const proxy = new Proxy(
     target,
     targetType === TargetType.COLLECTION ? collectionHandlers : baseHandlers
@@ -246,6 +253,7 @@ export function markRaw<T extends object>(value: T): T {
   return value
 }
 
+// 如果 value 是对象，就使用 reactive
 export const toReactive = <T extends unknown>(value: T): T =>
   isObject(value) ? reactive(value) : value
 

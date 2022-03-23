@@ -1,5 +1,6 @@
 <div id="app">
   <h1>{{title}}</h1>
+  <p>hello vue3!</p>
 </div>
 
 <script src="../dist/vue.global.js"></script>
@@ -15,6 +16,10 @@
       return {
         title: 'vue3 使用 setup 初始化流程'
       }
-    }
+    },
+    // 如果写 render 函数就是下面这样子，没有写就是由编译器自动生成
+    // render(h) {
+    //   return Vue.h('h1', this.title)
+    // },
   }).mount('#app')
 </script>

@@ -586,6 +586,7 @@ export function setupComponent(
   isInSSRComponentSetup = isSSR
 
   // 从虚拟dom中拿出了 props 和 children
+  // 对于一个组件的初始化就是孩子和属性的初始化
   const { props, children } = instance.vnode
   const isStateful = isStatefulComponent(instance)
   // 属性和插槽的初始化
@@ -634,7 +635,7 @@ function setupStatefulComponent(
   instance.accessCache = Object.create(null)
   // 1. create public instance / render proxy
   // also mark it raw so it's never observed
-  // 给当前组件做了一个代理
+  // 给当前组件做了一个代理，做一个渲染函数的上下文对象
   instance.proxy = markRaw(new Proxy(instance.ctx, PublicInstanceProxyHandlers))
   if (__DEV__) {
     exposePropsOnRenderContext(instance)
@@ -642,6 +643,7 @@ function setupStatefulComponent(
   // 2. call setup()
   // 调用 setup 选项
   const { setup } = Component
+  // 如果有 setup，做 composition 响应处理
   if (setup) {
     const setupContext = (instance.setupContext =
       setup.length > 1 ? createSetupContext(instance) : null)
@@ -683,6 +685,7 @@ function setupStatefulComponent(
       handleSetupResult(instance, setupResult, isSSR)
     }
   } else {
+    // 做数据响应式处理
     finishComponentSetup(instance, isSSR)
   }
 }
@@ -827,6 +830,7 @@ export function finishComponentSetup(
   if (__FEATURE_OPTIONS_API__ && !(__COMPAT__ && skipOptions)) {
     setCurrentInstance(instance)
     pauseTracking()
+    // 兼容 vue2 的 options api
     applyOptions(instance)
     resetTracking()
     unsetCurrentInstance()

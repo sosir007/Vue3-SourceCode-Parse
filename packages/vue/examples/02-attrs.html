@@ -1,0 +1,44 @@
+<div id="app">
+  <h1 :title="title">{{title}}</h1>
+  <!-- <p>hello vue3!</p> -->
+  <comp foo="foo" bar="bar">
+</div>
+
+<script src="../dist/vue.global.js"></script>
+<script>
+  Vue.createApp({
+    // 这个是框架帮我们做的响应式处理，setup 里面的需要手动响应式处理
+    // 存在 ctx.data
+    data() {
+      return {
+        title: 'vue3 使用 data 初始化流程'
+      }
+    },
+    // 优先从 setup 中先取值，如果找到了就不再找了，找不到就去 options 选项中找
+    // 存在 ctx.setupState
+    setup() {
+      const state = Vue.reactive({
+        title: "vue3 初始化流程"
+      })
+      return {
+        state
+      }
+      // return {
+      //   title: 'vue3 使用 setup 初始化流程'
+      // }
+    },
+    // 如果写 render 函数就是下面这样子，没有写就是由编译器自动生成
+    // render(h) {
+    //   return Vue.h('h1', this.title)
+    // },
+  })
+  .component('comp', {
+    props: ['foo'],
+    template: `
+      <div>comp</div>
+      <p>{{foo}}</p>
+      <p>{{$attrs.bar}}</p>
+    `
+  })
+  .mount('#app')
+</script>

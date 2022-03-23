@@ -557,6 +557,7 @@ export function applyOptions(instance: ComponentInternalInstance) {
 
   const {
     // state
+    // 把 data 重命名为 dataOptions
     data: dataOptions,
     computed: computedOptions,
     methods,
@@ -646,13 +647,17 @@ export function applyOptions(instance: ComponentInternalInstance) {
     }
   }
 
+  // data 选项的响应式处理部分
   if (dataOptions) {
+    // data 必须是一个函数，否则报错，避免数据被污染
     if (__DEV__ && !isFunction(dataOptions)) {
       warn(
         `The data option must be a function. ` +
           `Plain object usage is no longer supported.`
       )
     }
+    // 立刻调用 data 这个函数，返回一个对象
+    // 这个对象会被做响应式处理
     const data = dataOptions.call(publicThis, publicThis)
     if (__DEV__ && isPromise(data)) {
       warn(
@@ -661,9 +666,11 @@ export function applyOptions(instance: ComponentInternalInstance) {
           `async setup() + <Suspense>.`
       )
     }
+    // 返回必须是对象
     if (!isObject(data)) {
       __DEV__ && warn(`data() should return an object.`)
     } else {
+      // 直接调用 reactive 这个函数，做响应式处理
       instance.data = reactive(data)
       if (__DEV__) {
         for (const key in data) {

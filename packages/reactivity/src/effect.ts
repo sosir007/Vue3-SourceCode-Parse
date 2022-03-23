@@ -199,8 +199,12 @@ export function resetTracking() {
   shouldTrack = last === undefined ? true : last
 }
 
+// 依赖收集
+// targetMap：{ target: { key: [ activeEffect ] } } key 是对象 weakMap 类型，垃圾回收机制友好, value 是 map 类型
+            //  weakMap   Map   Set 与上面相对性
 export function track(target: object, type: TrackOpTypes, key: unknown) {
   if (shouldTrack && activeEffect) {
+    // 用户第一次来的时候，是需要初始化创建的
     let depsMap = targetMap.get(target)
     if (!depsMap) {
       targetMap.set(target, (depsMap = new Map()))
@@ -214,6 +218,7 @@ export function track(target: object, type: TrackOpTypes, key: unknown) {
       ? { effect: activeEffect, target, type, key }
       : undefined
 
+    // 创建依赖关系
     trackEffects(dep, eventInfo)
   }
 }
@@ -234,6 +239,7 @@ export function trackEffects(
   }
 
   if (shouldTrack) {
+    // 放入依赖集合，activeEffect 是更新函数
     dep.add(activeEffect!)
     activeEffect!.deps.push(dep)
     if (__DEV__ && activeEffect!.onTrack) {
@@ -336,6 +342,7 @@ export function trigger(
   }
 }
 
+// 找到相关的依赖，循环副作用函数
 export function triggerEffects(
   dep: Dep | ReactiveEffect[],
   debuggerEventExtraInfo?: DebuggerEventExtraInfo

@@ -81,6 +81,8 @@ function findInsertionIndex(id: number) {
   return start
 }
 
+// 将任务放入队列，queueJob 是组件更新函数
+// 在队列 queue 中放进去了一个组件更新函数 queue[componentUpdata, ...]
 export function queueJob(job: SchedulerJob) {
   // the dedupe search uses the startIndex argument of Array.includes()
   // by default the search index includes the current job that is being run
@@ -90,7 +92,7 @@ export function queueJob(job: SchedulerJob) {
   // ensure it doesn't end up in an infinite loop.
   if (
     (!queue.length ||
-      !queue.includes(
+      !queue.includes( // 去重
         job,
         isFlushing && job.allowRecurse ? flushIndex + 1 : flushIndex
       )) &&
@@ -105,9 +107,12 @@ export function queueJob(job: SchedulerJob) {
   }
 }
 
+// 启动批量任务执行
 function queueFlush() {
   if (!isFlushing && !isFlushPending) {
     isFlushPending = true
+    // 利用 Promise.then 启动一个微任务
+    // 因此 queueFlush 就会异步执行，异步到所以同步代码都执行完
     currentFlushPromise = resolvedPromise.then(flushJobs)
   }
 }

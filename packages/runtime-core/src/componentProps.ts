@@ -150,21 +150,29 @@ type NormalizedProp =
 export type NormalizedProps = Record<string, NormalizedProp>
 export type NormalizedPropsOptions = [NormalizedProps, string[]] | []
 
+// 组件属性的初始化
 export function initProps(
   instance: ComponentInternalInstance,
   rawProps: Data | null,
   isStateful: number, // result of bitwise flag comparison
   isSSR = false
 ) {
+  // 定义空的属性和特性
   const props: Data = {}
   const attrs: Data = {}
   def(attrs, InternalObjectKey, 1)
 
   instance.propsDefaults = Object.create(null)
 
+  // propsOptions: ['foo']
+  // 对比 02-attrs.html 对属性根据用户的定义去做拆分
+  // rawProps: {foo, bar}
+  // props: {foo}
+  // attrs: {bar}
   setFullProps(instance, rawProps, props, attrs)
 
   // ensure all declared prop keys are present
+  // propsOptions 用户定义的props选项
   for (const key in instance.propsOptions[0]) {
     if (!(key in props)) {
       props[key] = undefined

@@ -23,6 +23,7 @@ export interface WritableComputedOptions<T> {
   set: ComputedSetter<T>
 }
 
+// 类似于 RefImpl
 export class ComputedRefImpl<T> {
   public dep?: Dep = undefined
 
@@ -36,11 +37,13 @@ export class ComputedRefImpl<T> {
   public _cacheable: boolean
 
   constructor(
+    // getter是用户传进来的函数
     getter: ComputedGetter<T>,
     private readonly _setter: ComputedSetter<T>,
     isReadonly: boolean,
     isSSR: boolean
   ) {
+    // 创建响应式副作用
     this.effect = new ReactiveEffect(getter, () => {
       if (!this._dirty) {
         this._dirty = true
@@ -97,6 +100,7 @@ export function computed<T>(
     setter = getterOrOptions.set
   }
 
+  // 创建 ComputedRefImpl 实例
   const cRef = new ComputedRefImpl(getter, setter, onlyGetter || !setter, isSSR)
 
   if (__DEV__ && debugOptions && !isSSR) {

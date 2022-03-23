@@ -297,6 +297,7 @@ function doWatch(
   }
 
   let oldValue = isMultiSource ? [] : INITIAL_WATCHER_VALUE
+  // 创建计划任务
   const job: SchedulerJob = () => {
     if (!effect.active) {
       return
@@ -339,6 +340,7 @@ function doWatch(
   job.allowRecurse = !!cb
 
   let scheduler: EffectScheduler
+  // 根据用户传递的 watchOptions 决定如何 flushCb
   if (flush === 'sync') {
     scheduler = job as any // the scheduler function gets called directly
   } else if (flush === 'post') {
@@ -364,6 +366,7 @@ function doWatch(
   }
 
   // initial run
+  // 是否在初始化的时候运行 cb
   if (cb) {
     if (immediate) {
       job()

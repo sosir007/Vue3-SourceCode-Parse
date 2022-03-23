@@ -394,6 +394,7 @@ function baseCreateRenderer(
         }
         break
       case Fragment:  // 分片
+        // 如果有多个根就不会执行下面的 processElement 函数，会执行 processFragment 这个函数
         processFragment(
           n1,
           n2,
@@ -408,6 +409,7 @@ function baseCreateRenderer(
         break
       default:
         if (shapeFlag & ShapeFlags.ELEMENT) {
+          // 组件处理完，递归 patch 函数，执行 processElement
           processElement(
             n1,
             n2,
@@ -419,7 +421,7 @@ function baseCreateRenderer(
             slotScopeIds,
             optimized
           )
-        } else if (shapeFlag & ShapeFlags.COMPONENT) {  // 首次执行
+        } else if (shapeFlag & ShapeFlags.COMPONENT) {  // 初始化首次执行
           processComponent(
             n1,
             n2,
@@ -606,6 +608,7 @@ function baseCreateRenderer(
     }
   }
 
+  // 创建一个元素
   const mountElement = (
     vnode: VNode,
     container: RendererElement,
@@ -618,6 +621,7 @@ function baseCreateRenderer(
   ) => {
     let el: RendererElement
     let vnodeHook: VNodeHook | undefined | null
+    // 获取要创建元素的类型 type
     const { type, props, shapeFlag, transition, patchFlag, dirs } = vnode
     if (
       !__DEV__ &&
@@ -631,6 +635,7 @@ function baseCreateRenderer(
       // only do this in production since cloned trees cannot be HMR updated.
       el = vnode.el = hostCloneNode(vnode.el)
     } else {
+      // 首次创建一个新节点
       el = vnode.el = hostCreateElement(
         vnode.type as string,
         isSVG,
@@ -641,8 +646,10 @@ function baseCreateRenderer(
       // mount children first, since some props may rely on child content
       // being already rendered, e.g. `<select value>`
       if (shapeFlag & ShapeFlags.TEXT_CHILDREN) {
+        // 只有文本节点就走这里，做的就是 node.textContent = xxx
         hostSetElementText(el, vnode.children as string)
       } else if (shapeFlag & ShapeFlags.ARRAY_CHILDREN) {
+        // 如果存在子元素，则向下递归遍历
         mountChildren(
           vnode.children as VNodeArrayChildren,
           el,
@@ -655,10 +662,12 @@ function baseCreateRenderer(
         )
       }
 
+      // 如果有指令，执行这个函数
       if (dirs) {
         invokeDirectiveHook(vnode, null, parentComponent, 'created')
       }
       // props
+      // 如果元素有属性，则初始化这些属性
       if (props) {
         for (const key in props) {
           if (key !== 'value' && !isReservedProp(key)) {
@@ -716,6 +725,7 @@ function baseCreateRenderer(
     if (needCallTransitionHooks) {
       transition!.beforeEnter(el)
     }
+    // 追加到父元素，也就是宿主元素
     hostInsert(el, container, anchor)
     if (
       (vnodeHook = props && props.onVnodeMounted) ||
@@ -1062,6 +1072,7 @@ function baseCreateRenderer(
     const fragmentStartAnchor = (n2.el = n1 ? n1.el : hostCreateText(''))!
     const fragmentEndAnchor = (n2.anchor = n1 ? n1.anchor : hostCreateText(''))!
 
+    // 拿出一些子元素
     let { patchFlag, dynamicChildren, slotScopeIds: fragmentSlotScopeIds } = n2
 
     if (__DEV__ && isHmrUpdating) {
@@ -1079,6 +1090,7 @@ function baseCreateRenderer(
     }
 
     if (n1 == null) {
+      // 打两个锚点 anchor，将来插入的位置就是这两个位置之间
       hostInsert(fragmentStartAnchor, container, anchor)
       hostInsert(fragmentEndAnchor, container, anchor)
       // a fragment can only have array children
@@ -1230,9 +1242,10 @@ function baseCreateRenderer(
         startMeasure(instance, `init`)
       }
       // 2.初始化组件的实例
-      //   2.1 setup
-      //   2.1.1 编译 render 选项
-      //   2.2 applyOptions
+        // 2.1 setup
+        //   2.1.1 编译 render 选项
+        // 2.2 applyOptions
+        //   2.2.1 data/props/methods/computed/watch 响应式处理
       setupComponent(instance)
       if (__DEV__) {
         endMeasure(instance, `init`)
@@ -1321,6 +1334,9 @@ function baseCreateRenderer(
   ) => {
     // 1.创建更新函数
     const componentUpdateFn = () => {
+      // 首次执行，挂载只走一遍，以后组件再更新会走 else
+      // render => vnode
+      // patch(vnode) => dom
       if (!instance.isMounted) {
         let vnodeHook: VNodeHook | null | undefined
         const { el, props } = initialVNode
@@ -1387,6 +1403,12 @@ function baseCreateRenderer(
           if (__DEV__) {
             startMeasure(instance, `render`)
           }
+          // 执行当前组件实例的 render 函数获取 vnode
+          // 如果执行 01-init.html 文件得到的树 subTree 应该是下面这样子的
+          // {
+          //   type: 'h1',
+          //   children: this.title
+          // }
           const subTree = (instance.subTree = renderComponentRoot(instance))
           if (__DEV__) {
             endMeasure(instance, `render`)
@@ -1394,6 +1416,7 @@ function baseCreateRenderer(
           if (__DEV__) {
             startMeasure(instance, `patch`)
           }
+          // 首次 patch，将会创建这些子元素
           patch(
             null,
             subTree,
@@ -1457,6 +1480,7 @@ function baseCreateRenderer(
         // #2458: deference mount-only object parameters to prevent memleaks
         initialVNode = container = anchor = null as any
       } else {
+        // 更新组件的流程开始
         // updateComponent
         // This is triggered by mutation of component's own state (next: null)
         // OR parent calling processComponent (next: VNode)
@@ -1496,16 +1520,20 @@ function baseCreateRenderer(
         if (__DEV__) {
           startMeasure(instance, `render`)
         }
+        // 再次执行 render 函数，获取最新的 vnode
         const nextTree = renderComponentRoot(instance)
         if (__DEV__) {
           endMeasure(instance, `render`)
         }
+        // 先获取上次的 render计算结果 vnode
         const prevTree = instance.subTree
         instance.subTree = nextTree
 
         if (__DEV__) {
           startMeasure(instance, `patch`)
         }
+        // diff过程
+        // 根据新老 vnode 之间的不同，判断出要做的精确的 dom 操作
         patch(
           prevTree,
           nextTree,
@@ -1559,14 +1587,18 @@ function baseCreateRenderer(
     }
 
     // 2.创建更新机制，安装副作用，按照 参数2 的方式去执行 参数1
+    // 副作用：如果 componentUpdateFn 执行的过程中有响应式数据发生变化
+    // 则按照参数2（ () => queueJob(instance.update)）的方式来执行参数1
     // create reactive effect for rendering
     const effect = (instance.effect = new ReactiveEffect(
-      componentUpdateFn,
+      componentUpdateFn,  // 此函数在响应式数据变化的时候会再次执行
       () => queueJob(instance.update),
       instance.scope // track it in component's effect scope
     ))
 
-    // 获取更新函数
+    // 获取更新函数，effect.run 函数其实就是上面的 componentUpdateFn
+    // 把组件更新函数赋值给了当前组件实例的 update 属性
+    // 拿出 run 函数，它可以立刻执行
     const update = (instance.update = effect.run.bind(effect) as SchedulerJob)
     update.id = instance.uid
     // allowRecurse
@@ -1584,7 +1616,7 @@ function baseCreateRenderer(
       update.ownerInstance = instance
     }
 
-    // 首次执行组件更新，这个时候用户才看到了首屏界面
+    // 首次执行组件更新，这个时候用户才看到了首屏界面，这个 update 其实执行的就是上面的 componentUpdateFn 函数
     update()
   }
 

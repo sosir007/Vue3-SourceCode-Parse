@@ -1,0 +1,48 @@
+<div id="app">
+  <h1>vue3 Composition API</h1>
+  <p>{{ counter }}</p>
+</div>
+
+<script src="../dist/vue.global.js"></script>
+<script>
+  // vue2：new Vue({}).$mount()
+  // 变化1：函数创建实例
+  // Vue.component()
+  // vue3: createAppe({})
+  Vue.createApp({
+    data() {
+      return {
+        title: 'vue3 使用 data 初始化流程'
+      }
+    },
+    // 优先从 setup 中先取值，如果找到了就不再找了，找不到就去 options 选项中找
+    setup() {
+      const counter = Vue.ref(0);
+      // computed
+      // 从响应式数据派生出新数据
+      // 同步的，具有缓存性
+      // ComputedRef
+      const doubleCounter = Vue.computed(() => counter * 2)
+      // 另一种方式，传入一个对象
+      const doubleCounter2 = Vue.computed({
+        get() {},
+        set() {}
+      })
+
+      // watch
+      // 响应式数据变化做一些额外的事情（执行副作用）
+      // 可以异步的，可以获取数据变化前后的值
+      watch(() => obj.foo, (v1, v2) => {
+
+      })
+
+      return {
+        counter
+      }
+    },
+    // 如果写 render 函数就是下面这样子，没有写就是由编译器自动生成
+    // render(h) {
+    //   return Vue.h('h1', this.title)
+    // },
+  }).mount('#app')
+</script>

@@ -79,6 +79,7 @@ function createArrayInstrumentations() {
   return instrumentations
 }
 
+// 默认情况下是可编辑的，深层次的响应式
 function createGetter(isReadonly = false, shallow = false) {
   return function get(target: Target, key: string | symbol, receiver: object) {
     if (key === ReactiveFlags.IS_REACTIVE) {
@@ -114,6 +115,7 @@ function createGetter(isReadonly = false, shallow = false) {
       return res
     }
 
+    // 依赖收集
     if (!isReadonly) {
       track(target, TrackOpTypes.GET, key)
     }
